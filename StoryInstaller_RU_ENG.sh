@@ -252,3 +252,13 @@ install_node() {
     read -p "$(if [[ $LANGUAGE == "RU" ]]; then echo 'Введите название ноды: '; else echo 'Enter node alias: '; fi)" alias
     setup_environment
     fetch_core
+    fetch_secondary
+    initialize_node "$alias"
+    configure_services
+    activate_services
+    restore_backups
+    log_message "success" "install_complete"
+}
+
+# Call the main function
+install_node
