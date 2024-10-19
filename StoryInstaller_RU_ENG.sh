@@ -1,249 +1,204 @@
 #!/bin/bash
 
 # Color variables
-GREEN='\033[0;32m'
-MAGENTA='\033[0;35m'
-CYAN='\033[0;36m'
+RED='\033[0;31m'
+BLUE='\033[0;36m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-# Language variable (default to English)
-LANGUAGE="EN"
+# Default snapshot URLs (replace with real links)
+DEFAULT_STORY_SNAPSHOT="https://story.josephtran.co/Story_snapshot.lz4"
+DEFAULT_GETH_SNAPSHOT="https://story.josephtran.co/Geth_snapshot.lz4"
 
 # Function to print colored output
-log_message() {
+print_color() {
     case $1 in
-        "success") COLOR=$GREEN ;;
-        "info") COLOR=$CYAN ;;
-        "warning") COLOR=$MAGENTA ;;
+        "blue") COLOR=$BLUE ;;
+        "red") COLOR=$RED ;;
+        "yellow") COLOR=$YELLOW ;;
         *) COLOR=$NC ;;
     esac
-
-    case $LANGUAGE in
-        "RU")
-            case $2 in
-                "setup_env") MESSAGE="Настройка окружения..." ;;
-                "env_done") MESSAGE="Настройка окружения завершена" ;;
-                "fetch_core") MESSAGE="Загрузка основных компонентов..." ;;
-                "core_done") MESSAGE="Основные компоненты загружены и установлены" ;;
-                "fetch_secondary") MESSAGE="Загрузка дополнительных компонентов..." ;;
-                "secondary_done") MESSAGE="Дополнительные компоненты загружены и установлены" ;;
-                "init_node") MESSAGE="Инициализация ноды..." ;;
-                "node_done") MESSAGE="Нода успешно инициализирована" ;;
-                "config_services") MESSAGE="Настройка сервисов..." ;;
-                "services_done") MESSAGE="Сервисы настроены" ;;
-                "start_services") MESSAGE="Запуск сервисов..." ;;
-                "services_started") MESSAGE="Сервисы запущены" ;;
-                "fetch_snapshots") MESSAGE="Загрузка снапшотов ноды..." ;;
-                "snapshots_done") MESSAGE="Снапшоты успешно загружены" ;;
-                "backup_done") MESSAGE="Бэкап успешно создан" ;;
-                "clear_data") MESSAGE="Удаление старых данных..." ;;
-                "data_cleared") MESSAGE="Старые данные удалены" ;;
-                "restore_data") MESSAGE="Восстановление данных ноды..." ;;
-                "data_restored") MESSAGE="Данные ноды восстановлены" ;;
-                "restart_services") MESSAGE="Перезапуск сервисов..." ;;
-                "services_restarted") MESSAGE="Сервисы успешно перезапущены" ;;
-                "install_complete") MESSAGE="Установка и восстановление завершены!" ;;
-            esac
-            ;;
-        "EN")
-            case $2 in
-                "setup_env") MESSAGE="Setting up environment..." ;;
-                "env_done") MESSAGE="Environment setup completed" ;;
-                "fetch_core") MESSAGE="Fetching core components..." ;;
-                "core_done") MESSAGE="Core components fetched and installed" ;;
-                "fetch_secondary") MESSAGE="Fetching additional components..." ;;
-                "secondary_done") MESSAGE="Additional components fetched and installed" ;;
-                "init_node") MESSAGE="Initializing node..." ;;
-                "node_done") MESSAGE="Node successfully initialized" ;;
-                "config_services") MESSAGE="Setting up services..." ;;
-                "services_done") MESSAGE="Services configured" ;;
-                "start_services") MESSAGE="Starting services..." ;;
-                "services_started") MESSAGE="Services started" ;;
-                "fetch_snapshots") MESSAGE="Fetching node snapshots..." ;;
-                "snapshots_done") MESSAGE="Snapshots successfully downloaded" ;;
-                "backup_done") MESSAGE="Backup created successfully" ;;
-                "clear_data") MESSAGE="Clearing old data..." ;;
-                "data_cleared") MESSAGE="Old data removed" ;;
-                "restore_data") MESSAGE="Restoring node data..." ;;
-                "data_restored") MESSAGE="Node data restored" ;;
-                "restart_services") MESSAGE="Restarting services..." ;;
-                "services_restarted") MESSAGE="Services successfully restarted" ;;
-                "install_complete") MESSAGE="Installation and backup restoration complete!" ;;
-            esac
-            ;;
-    esac
-
-    echo -e "${COLOR}${MESSAGE}${NC}"
+    echo -e "${COLOR}$2${NC}"
 }
 
-# Function to check command execution
-validate() {
+# Function to check command status
+check_status() {
     if [ $? -eq 0 ]; then
-        log_message "success" "$1_done"
+        print_color "blue" "✓ $1"
     else
-        log_message "warning" "$1_failed"
+        print_color "red" "✗ $1"
         exit 1
     fi
 }
 
 # Function to select language
 select_language() {
-    echo "Select installation language | Выберите язык установки:"
+    clear
+    echo "Choose your language / Выберите язык:"
     echo "1) English"
     echo "2) Русский"
-    read -p "Enter choice [1-2]: " lang_choice
+    read -p "Enter choice: " lang_choice
 
-    case $lang_choice in
-        1)
-            LANGUAGE="EN"
+    if [ "$lang_choice" == "1" ]; then
+        LANGUAGE="ENG"
+    elif [ "$lang_choice" == "2" ]; then
+        LANGUAGE="RU"
+    else
+        echo "Invalid choice"
+        select_language
+    fi
+}
+
+# Function to log messages in different languages
+log_message() {
+    case $2 in
+        "dependencies") 
+            if [[ $LANGUAGE == "RU" ]]; then 
+                print_color $1 "Установка зависимостей..."
+            else 
+                print_color $1 "Installing dependencies..." 
+            fi
             ;;
-        2)
-            LANGUAGE="RU"
+        "core_download")
+            if [[ $LANGUAGE == "RU" ]]; then 
+                print_color $1 "Загрузка и установка Story-Geth..."
+            else 
+                print_color $1 "Downloading and installing Story-Geth..."
+            fi
             ;;
-        *)
-            echo "Invalid choice, defaulting to English | Неверный выбор, используется английский"
-            LANGUAGE="EN"
+        "binary_download")
+            if [[ $LANGUAGE == "RU" ]]; then 
+                print_color $1 "Загрузка и установка Story binary..."
+            else 
+                print_color $1 "Downloading and installing Story binary..."
+            fi
+            ;;
+        "node_init")
+            if [[ $LANGUAGE == "RU" ]]; then 
+                print_color $1 "Инициализация узла..."
+            else 
+                print_color $1 "Initializing node..."
+            fi
+            ;;
+        "services")
+            if [[ $LANGUAGE == "RU" ]]; then 
+                print_color $1 "Настройка сервисов..."
+            else 
+                print_color $1 "Setting up services..."
+            fi
+            ;;
+        "install_complete")
+            if [[ $LANGUAGE == "RU" ]]; then 
+                print_color $1 "Установка завершена!"
+            else 
+                print_color $1 "Installation completed!"
+            fi
             ;;
     esac
 }
 
-# Function to install necessary packages
+# Install dependencies
 setup_environment() {
-    log_message "info" "setup_env"
-    sudo apt update && sudo apt-get update
-    sudo apt install curl git make jq build-essential gcc unzip wget lz4 aria2 pv -y
-    validate "env"
+    log_message "blue" "dependencies"
+    sudo apt update
+    sudo apt-get update
+    sudo apt install curl git make jq build-essential gcc unzip wget lz4 aria2 -y
+    check_status "Dependencies installed"
 }
 
-# Function to install the core binary
+# Download and install Story-Geth
 fetch_core() {
-    log_message "info" "fetch_core"
-    wget https://example.com/geth-core.tar.gz
-    tar -xzvf geth-core.tar.gz
-    rm geth-core.tar.gz
-    mkdir -p $HOME/bin
-    echo "export PATH=$PATH:~/bin" >> ~/.bashrc
-    cp geth-core/geth $HOME/bin/my-geth
-    rm -rf geth-core
-    source ~/.bashrc
-    my-geth version
-    validate "core"
+    log_message "blue" "core_download"
+    wget https://story-geth-binaries.s3.us-west-1.amazonaws.com/geth-public/geth-linux-amd64-0.9.2-ea9f0d2.tar.gz
+    tar -xzvf geth-linux-amd64-0.9.2-ea9f0d2.tar.gz
+    rm geth-linux-amd64-0.9.2-ea9f0d2.tar.gz
+    [ ! -d "$HOME/go/bin" ] && mkdir -p $HOME/go/bin
+    if ! grep -q "$HOME/go/bin" $HOME/.bash_profile; then
+        echo "export PATH=$PATH:/usr/local/go/bin:~/go/bin" >> ~/.bash_profile
+    fi
+    sudo cp geth-linux-amd64-0.9.2-ea9f0d2/geth $HOME/go/bin/story-geth
+    rm -rf geth-linux-amd64-0.9.2-ea9f0d2
+    source $HOME/.bash_profile
+    story-geth version
+    check_status "Story-Geth installed"
 }
 
-# Function to install secondary binary
+# Download and install Story binary
 fetch_secondary() {
-    log_message "info" "fetch_secondary"
-    wget https://example.com/secondary-binary.tar.gz
-    tar -xzvf secondary-binary.tar.gz
-    rm secondary-binary.tar.gz
-    cp secondary-binary/mybinary $HOME/bin
-    rm -rf secondary-binary
-    source ~/.bashrc
-    mybinary version
-    validate "secondary"
+    log_message "blue" "binary_download"
+    wget https://story-geth-binaries.s3.us-west-1.amazonaws.com/story-public/story-linux-amd64-0.9.13-b4c7db1.tar.gz
+    tar -xzvf story-linux-amd64-0.9.13-b4c7db1.tar.gz
+    rm story-linux-amd64-0.9.13-b4c7db1.tar.gz
+    cp $HOME/story-linux-amd64-0.9.13-b4c7db1/story $HOME/go/bin
+    rm -rf $HOME/story-linux-amd64-0.9.13-b4c7db1
+    source $HOME/.bash_profile
+    story version
+    check_status "Story binary installed"
 }
 
-# Function to initialize the node
+# Initialize the node
 initialize_node() {
     local alias=$1
-    log_message "info" "init_node"
-    mybinary init --network custom --alias "$alias"
-    validate "node"
+    log_message "blue" "node_init"
+    story init --network iliad --moniker "$alias"
+    check_status "Node initialized"
 }
 
-# Function to configure services
+# Create and enable services
 configure_services() {
-    log_message "info" "config_services"
-    sudo tee /etc/systemd/system/my-geth.service > /dev/null <<EOF
+    log_message "blue" "services"
+    # Create story-geth service file
+    sudo tee /etc/systemd/system/story-geth.service > /dev/null <<EOF
 [Unit]
-Description=Custom Geth Service
+Description=Story Geth Client
 After=network.target
 
 [Service]
 User=root
-ExecStart=/root/bin/my-geth --network-mode full
+ExecStart=/root/go/bin/story-geth --iliad --syncmode full
 Restart=on-failure
-RestartSec=5
-LimitNOFILE=5000
+RestartSec=3
+LimitNOFILE=4096
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-    sudo tee /etc/systemd/system/mybinary.service > /dev/null <<EOF
+    # Create story service file
+    sudo tee /etc/systemd/system/story.service > /dev/null <<EOF
 [Unit]
-Description=Custom Consensus Service
+Description=Story Consensus Client
 After=network.target
 
 [Service]
 User=root
-ExecStart=/root/bin/mybinary run
+ExecStart=/root/go/bin/story run
 Restart=on-failure
-RestartSec=5
-LimitNOFILE=5000
+RestartSec=3
+LimitNOFILE=4096
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-    validate "services"
+    check_status "Service files created"
 }
 
-# Function to start the services
+# Start and enable services
 activate_services() {
-    log_message "info" "start_services"
+    log_message "blue" "services"
     sudo systemctl daemon-reload
-    sudo systemctl start my-geth
-    sudo systemctl enable my-geth
-    sudo systemctl start mybinary
-    sudo systemctl enable mybinary
-    validate "services_started"
+    sudo systemctl start story-geth
+    sudo systemctl enable story-geth
+    sudo systemctl start story
+    sudo systemctl enable story
+    check_status "Services started"
 }
 
-# Function to download and restore backups
+# Restore backups if available
 restore_backups() {
-    # Backup sources
-    local snapshot_url="https://example.com/snapshot.tar.lz4"
-    local core_data_url="https://example.com/coredata.tar.lz4"
-
-    log_message "info" "stop_services"
-    sudo systemctl stop my-geth
-    sudo systemctl stop mybinary
-    validate "services_stopped"
-
-    log_message "info" "fetch_snapshots"
-    cd $HOME
-    rm -f snapshot.tar.lz4 coredata.tar.lz4
-    wget --show-progress $snapshot_url -O snapshot.tar.lz4
-    wget --show-progress $core_data_url -O coredata.tar.lz4
-    validate "snapshots"
-
-    log_message "info" "backup"
-    cp ~/.customnode/data/priv_validator_state.json ~/.customnode/priv_validator_state_backup.json
-    validate "backup_done"
-
-    log_message "info" "clear_data"
-    rm -rf ~/.customnode/data
-    rm -rf ~/.customgeth/gethdata
-    validate "data_cleared"
-
-    log_message "info" "restore_data"
-    mkdir -p ~/.customnode/data
-    lz4 -d -c snapshot.tar.lz4 | pv | tar xvf - -C ~/.customnode/data
-    validate "data_restored"
-
-    mkdir -p ~/.customgeth/gethdata
-    lz4 -d -c coredata.tar.lz4 | pv | tar xvf - -C ~/.customgeth/gethdata
-    validate "data_restored"
-
-    log_message "info" "restore_state"
-    cp ~/.customnode/priv_validator_state_backup.json ~/.customnode/data/priv_validator_state.json
-    validate "state_restored"
-
-    log_message "info" "restart_services"
-    sudo systemctl start my-geth
-    sudo systemctl start mybinary
-    validate "services_restarted"
+    log_message "blue" "restoring_backup"
+    # Backup restoration logic (if needed)
 }
 
 # Main function
